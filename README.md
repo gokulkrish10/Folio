@@ -5,7 +5,8 @@ IndexedDB, Framer Motion, and Tailwind CSS. Books never leave the browser.
 
 ## Features
 
-- Drag-and-drop PDF import with metadata and cover extraction
+- Drag-and-drop PDF upload or public PDF link import
+- Metadata and cover extraction for both local and linked books
 - One-page reading with swipe, keyboard, scrubber, and page-jump navigation
 - Automatic reading position, bookmark, session, and unique-page tracking
 - Light, sepia, and night reading themes
@@ -41,6 +42,11 @@ PDF bytes and generated cover thumbnails are stored in the browser's
 IndexedDB database (`folio-bookshelf`). Reading progress, bookmarks, theme,
 and statistics are stored in localStorage. There is no account, upload API, or
 external backend.
+
+Linked PDFs pass temporarily through the app's `/api/pdf` route to avoid
+cross-origin browser restrictions. The route accepts only public HTTP(S)
+addresses, blocks private-network destinations, validates the PDF signature,
+and limits imports to 75 MB. The server does not retain the file.
 
 Browser storage quotas vary by platform. Very large libraries can be removed
 by the operating system when device storage is constrained, so original PDFs

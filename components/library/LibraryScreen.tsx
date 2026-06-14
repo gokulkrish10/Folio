@@ -2,6 +2,7 @@
 
 import { BookOpenText, CheckCircle2, X, XCircle } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { AddBookDialog } from "@/components/library/AddBookDialog";
 import { BookCard } from "@/components/library/BookCard";
 import { EmptyState } from "@/components/library/EmptyState";
 import { UploadZone } from "@/components/library/UploadZone";
@@ -73,11 +74,7 @@ export function LibraryScreen() {
               </p>
             </div>
           </div>
-          <UploadZone
-            compact
-            onUploaded={onUploaded}
-            onError={onError}
-          />
+          <AddBookDialog onUploaded={onUploaded} onError={onError} />
         </div>
       </header>
 
