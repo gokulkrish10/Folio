@@ -118,6 +118,9 @@ input:focus-visible {
 
 .reader-canvas-shell canvas {
   display: block;
+  transition:
+    filter 220ms ease,
+    box-shadow 220ms ease;
 }
 
 [data-theme="light"] .reader-canvas-shell canvas,
@@ -126,7 +129,58 @@ input:focus-visible {
 }
 
 [data-theme="dark"] .reader-canvas-shell canvas {
-  filter: brightness(0.82) contrast(0.96);
+  box-shadow: none;
+  filter: invert(0.92) hue-rotate(180deg) brightness(0.78) contrast(0.92);
+}
+
+[data-theme="dark"] .reader-canvas-shell {
+  background: #0d0d0d;
+}
+
+.reflow-page {
+  color: var(--text);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: var(--reader-font-size);
+  line-height: var(--reader-line-height);
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.reflow-paragraph {
+  margin: 0 0 1.15em;
+  text-align: left;
+}
+
+.reflow-heading {
+  margin: 1.7em 0 1em;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.018em;
+  text-wrap: balance;
+}
+
+.reflow-heading:first-child {
+  margin-top: 0.35em;
+}
+
+.reflow-heading-1 {
+  font-size: 1.72em;
+}
+
+.reflow-heading-2 {
+  font-size: 1.48em;
+}
+
+.reflow-heading-3 {
+  font-size: 1.25em;
+}
+
+@media (min-width: 640px) {
+  .reflow-paragraph {
+    text-align: justify;
+    text-wrap: pretty;
+  }
 }
 
 input[type="range"] {

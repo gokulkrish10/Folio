@@ -7,16 +7,27 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { BookmarkPanel } from "@/components/reader/BookmarkPanel";
 import { PageJumpModal } from "@/components/reader/PageJumpModal";
 import { PDFCanvas } from "@/components/reader/PDFCanvas";
+import { ReflowTextPage } from "@/components/reader/ReflowTextPage";
 import { ReaderControls } from "@/components/reader/ReaderControls";
 import { ReaderSettings } from "@/components/reader/ReaderSettings";
 import { TOCPanel } from "@/components/reader/TOCPanel";
 import { ZoomWrapper } from "@/components/reader/ZoomWrapper";
 import { useReader } from "@/contexts/ReaderContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { usePDFRenderer } from "@/hooks/usePDFRenderer";
 import { useReadingProgress } from "@/hooks/useReadingProgress";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
-import { getReadingProgress } from "@/lib/reading-progress";
+import {
+  getReadingProgress,
+  getStoredReaderLayout,
+  getStoredTextSettings,
+  getStoredZoom,
+  saveStoredReaderLayout,
+  saveStoredTextSettings,
+  saveStoredZoom,
+} from "@/lib/reading-progress";
+import type { ReaderLayout, ReaderTextSettings } from "@/types/book";
 
 interface ReaderScreenProps {
   bookId: string;
@@ -24,6 +35,7 @@ interface ReaderScreenProps {
 
 export function ReaderScreen({ bookId }: ReaderScreenProps) {
   const { state, dispatch } = useReader();
+  const { theme, setTheme } = useTheme();
   const { book, document, outline, loading, error } = usePDFRenderer(bookId);
   const { progress, startSession, savePage, toggleBookmark } =
     useReadingProgress(bookId);
@@ -33,6 +45,14 @@ export function ReaderScreen({ bookId }: ReaderScreenProps) {
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
   const [tocOpen, setTocOpen] = useState(false);
   const [jumpOpen, setJumpOpen] = useState(false);
+  const [zoomScale, setZoomScale] = useState(() => getStoredZoom(bookId));
+  const [readerLayout, setReaderLayout] = useState<ReaderLayout>(() =>
+    getStoredReaderLayout(bookId),
+  );
+  const [textSettings, setTextSettings] = useState<ReaderTextSettings>(
+    getStoredTextSettings,
+  );
+  const zoomed = readerLayout === "page" && zoomScale > 1.01;
 
   useEffect(() => {
     if (!book || initializedRef.current) return;
@@ -56,6 +76,28 @@ export function ReaderScreen({ bookId }: ReaderScreenProps) {
     savePage(state.currentPage);
   }, [book, savePage, state.bookId, state.currentPage]);
 
+  useEffect(() => {
+    const timer = window.setTimeout(
+      () => saveStoredZoom(bookId, zoomScale),
+      200,
+    );
+    return () => window.clearTimeout(timer);
+  }, [bookId, zoomScale]);
+
+  useEffect(() => {
+    saveStoredReaderLayout(bookId, readerLayout);
+  }, [bookId, readerLayout]);
+
+  useEffect(() => {
+    saveStoredTextSettings(textSettings);
+  }, [textSettings]);
+
+  useEffect(() => {
+    if (readerLayout === "reflow") {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    }
+  }, [readerLayout, state.currentPage]);
+
   const goToPage = useCallback(
     (page: number) => {
       dispatch({ type: "GO_TO_PAGE", page });
@@ -74,7 +116,7 @@ export function ReaderScreen({ bookId }: ReaderScreenProps) {
   );
 
   useKeyboardNavigation(previous, next, !settingsOpen && !jumpOpen);
-  const swipeHandlers = useSwipeNavigation(previous, next);
+  const swipeHandlers = useSwipeNavigation(previous, next, !zoomed);
 
   const anyPanelOpen =
     settingsOpen || bookmarksOpen || tocOpen || jumpOpen;
@@ -156,7 +198,11 @@ export function ReaderScreen({ bookId }: ReaderScreenProps) {
   return (
     <main
       {...swipeHandlers}
-      className="relative min-h-dvh overflow-x-hidden bg-[var(--bg)] transition-colors duration-200"
+      className={`relative bg-[var(--bg)] transition-colors duration-200 ${
+        zoomed
+          ? "h-dvh overflow-hidden overscroll-none"
+          : "min-h-dvh overflow-x-hidden"
+      }`}
       onClick={() =>
         dispatch({
           type: "SET_CONTROLS",
@@ -167,7 +213,7 @@ export function ReaderScreen({ bookId }: ReaderScreenProps) {
       <div className="mx-auto flex min-h-dvh w-full items-start justify-center">
         <AnimatePresence initial={false} mode="wait" custom={state.direction}>
           <motion.div
-            key={state.currentPage}
+            key={`${readerLayout}-${state.currentPage}`}
             custom={state.direction}
             variants={{
               enter: (direction: 1 | -1) => ({
@@ -186,13 +232,27 @@ export function ReaderScreen({ bookId }: ReaderScreenProps) {
             transition={{ duration: 0.25, ease: "easeOut" }}
             className="w-full"
           >
-            <ZoomWrapper pageNumber={state.currentPage}>
-              <PDFCanvas
+            {readerLayout === "reflow" ? (
+              <ReflowTextPage
                 document={document}
                 pageNumber={state.currentPage}
                 totalPages={state.totalPages}
+                settings={textSettings}
+                onUseOriginal={() => setReaderLayout("page")}
               />
-            </ZoomWrapper>
+            ) : (
+              <ZoomWrapper
+                pageNumber={state.currentPage}
+                scale={zoomScale}
+                onScaleChange={setZoomScale}
+              >
+                <PDFCanvas
+                  document={document}
+                  pageNumber={state.currentPage}
+                  totalPages={state.totalPages}
+                />
+              </ZoomWrapper>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -203,7 +263,19 @@ export function ReaderScreen({ bookId }: ReaderScreenProps) {
         page={state.currentPage}
         totalPages={state.totalPages}
         bookmarked={bookmarked}
+        nightMode={theme === "dark"}
+        zoomPercent={
+          readerLayout === "page" ? Math.round(zoomScale * 100) : 100
+        }
+        onToggleNightMode={() => {
+          setTheme(theme === "dark" ? "light" : "dark");
+          wakeControls();
+        }}
         onBookmark={toggleCurrentBookmark}
+        onResetZoom={() => {
+          setZoomScale(1);
+          wakeControls();
+        }}
         onMenu={() => {
           setSettingsOpen(true);
           wakeControls();
@@ -222,6 +294,14 @@ export function ReaderScreen({ bookId }: ReaderScreenProps) {
         hasContents={outline.length > 0}
         pagesRead={progress.pagesRead.length}
         sessions={progress.sessions}
+        layout={readerLayout}
+        textSettings={textSettings}
+        onLayoutChange={(layout) => {
+          setReaderLayout(layout);
+          setSettingsOpen(false);
+          wakeControls();
+        }}
+        onTextSettingsChange={setTextSettings}
         onOpenBookmarks={() => {
           setSettingsOpen(false);
           setBookmarksOpen(true);

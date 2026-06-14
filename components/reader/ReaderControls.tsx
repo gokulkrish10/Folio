@@ -7,6 +7,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
+  Moon,
+  RotateCcw,
+  Sun,
 } from "lucide-react";
 import Link from "next/link";
 import { PageScrubber } from "@/components/reader/PageScrubber";
@@ -17,7 +20,11 @@ interface ReaderControlsProps {
   page: number;
   totalPages: number;
   bookmarked: boolean;
+  nightMode: boolean;
+  zoomPercent: number;
   onBookmark: () => void;
+  onToggleNightMode: () => void;
+  onResetZoom: () => void;
   onMenu: () => void;
   onPrevious: () => void;
   onNext: () => void;
@@ -40,7 +47,11 @@ export function ReaderControls({
   page,
   totalPages,
   bookmarked,
+  nightMode,
+  zoomPercent,
   onBookmark,
+  onToggleNightMode,
+  onResetZoom,
   onMenu,
   onPrevious,
   onNext,
@@ -68,6 +79,24 @@ export function ReaderControls({
               <h1 className="min-w-0 flex-1 truncate px-1 text-sm font-medium sm:text-base">
                 {title}
               </h1>
+              <button
+                type="button"
+                onClick={onToggleNightMode}
+                className={`reader-control-button ${
+                  nightMode ? "text-[var(--accent)]" : ""
+                }`}
+                aria-label={
+                  nightMode ? "Turn off night mode" : "Turn on night mode"
+                }
+                aria-pressed={nightMode}
+                title={nightMode ? "Turn off night mode" : "Night mode"}
+              >
+                {nightMode ? (
+                  <Sun size={20} />
+                ) : (
+                  <Moon size={20} fill="currentColor" />
+                )}
+              </button>
               <button
                 type="button"
                 onClick={onBookmark}
@@ -113,6 +142,17 @@ export function ReaderControls({
                 >
                   {page} <span className="text-white/45">/ {totalPages}</span>
                 </button>
+                {zoomPercent > 100 ? (
+                  <button
+                    type="button"
+                    onClick={onResetZoom}
+                    className="flex min-h-11 items-center gap-1.5 rounded-xl bg-white/10 px-3 font-semibold text-[var(--accent)] transition hover:bg-white/15"
+                    aria-label={`Reset zoom from ${zoomPercent} percent`}
+                  >
+                    {zoomPercent}%
+                    <RotateCcw size={14} />
+                  </button>
+                ) : null}
                 <span className="text-white/55">
                   {remainingTime(page, totalPages)}
                 </span>

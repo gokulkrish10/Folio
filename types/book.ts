@@ -1,4 +1,16 @@
 export type ReaderTheme = "light" | "dark" | "sepia";
+export type ReaderLayout = "reflow" | "page";
+
+export interface ReaderTextSettings {
+  fontSize: number;
+  lineHeight: number;
+}
+
+export interface ReflowBlock {
+  type: "heading" | "paragraph";
+  text: string;
+  level?: 1 | 2 | 3;
+}
 
 export interface BookRecord {
   id: string;

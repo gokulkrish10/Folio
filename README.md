@@ -8,9 +8,10 @@ IndexedDB, Framer Motion, and Tailwind CSS. Books never leave the browser.
 - Drag-and-drop PDF upload or public PDF link import
 - Metadata and cover extraction for both local and linked books
 - One-page reading with swipe, keyboard, scrubber, and page-jump navigation
+- Mobile-first readable-text mode that reflows PDF text to the screen width
 - Automatic reading position, bookmark, session, and unique-page tracking
-- Light, sepia, and night reading themes
-- Pinch and double-tap zoom
+- Light, sepia, and true low-light night reading themes
+- Persistent pinch and double-tap zoom with bounded page panning
 - PDF outline navigation when a table of contents is present
 - IndexedDB book storage and service-worker-powered offline support
 - Installable PWA with a mobile-first, safe-area-aware interface
@@ -57,4 +58,11 @@ should be kept elsewhere as a backup.
 - Swipe left or right to change pages.
 - Tap the reading surface to show or hide controls.
 - Pinch to zoom, or double-tap to toggle 150% zoom.
+- While zoomed, drag freely to read the left, right, top, or bottom of the
+  page. Page-swipe navigation is paused so panning cannot change pages.
+- Zoom level stays active across page changes and browser reloads. Tap the
+  percentage in the bottom controls to reset to 100%.
 - Use the page count in the bottom bar to jump directly to a page.
+- Tap the moon in the reader top bar for instant night mode.
+- Use Reading settings to switch between responsive readable text and the
+  original PDF page. Text size is adjustable and saved across sessions.

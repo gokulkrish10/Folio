@@ -1,9 +1,18 @@
 "use client";
 
-import type { Bookmark, ReadingProgress, ReaderTheme } from "@/types/book";
+import type {
+  Bookmark,
+  ReadingProgress,
+  ReaderLayout,
+  ReaderTextSettings,
+  ReaderTheme,
+} from "@/types/book";
 
 const PROGRESS_PREFIX = "folio:progress:";
 const THEME_KEY = "folio:theme";
+const ZOOM_PREFIX = "folio:zoom:";
+const LAYOUT_PREFIX = "folio:layout:";
+const TEXT_SETTINGS_KEY = "folio:text-settings";
 
 function storageAvailable() {
   return typeof window !== "undefined" && "localStorage" in window;
@@ -108,4 +117,63 @@ export function getStoredTheme(): ReaderTheme {
 export function saveStoredTheme(theme: ReaderTheme): void {
   if (!storageAvailable()) return;
   window.localStorage.setItem(THEME_KEY, theme);
+}
+
+export function getStoredZoom(bookId: string): number {
+  if (!storageAvailable()) return 1;
+  const value = Number(window.localStorage.getItem(`${ZOOM_PREFIX}${bookId}`));
+  return Number.isFinite(value) ? Math.min(3, Math.max(1, value)) : 1;
+}
+
+export function saveStoredZoom(bookId: string, scale: number): void {
+  if (!storageAvailable()) return;
+  const normalized = Math.min(3, Math.max(1, scale));
+  window.localStorage.setItem(
+    `${ZOOM_PREFIX}${bookId}`,
+    normalized.toFixed(2),
+  );
+}
+
+export function getStoredReaderLayout(bookId: string): ReaderLayout {
+  if (!storageAvailable()) return "reflow";
+  return window.localStorage.getItem(`${LAYOUT_PREFIX}${bookId}`) === "page"
+    ? "page"
+    : "reflow";
+}
+
+export function saveStoredReaderLayout(
+  bookId: string,
+  layout: ReaderLayout,
+): void {
+  if (!storageAvailable()) return;
+  window.localStorage.setItem(`${LAYOUT_PREFIX}${bookId}`, layout);
+}
+
+const defaultTextSettings: ReaderTextSettings = {
+  fontSize: 19,
+  lineHeight: 1.75,
+};
+
+export function getStoredTextSettings(): ReaderTextSettings {
+  if (!storageAvailable()) return defaultTextSettings;
+
+  try {
+    const stored = JSON.parse(
+      window.localStorage.getItem(TEXT_SETTINGS_KEY) || "{}",
+    ) as Partial<ReaderTextSettings>;
+    return {
+      fontSize: Math.min(28, Math.max(15, Number(stored.fontSize) || 19)),
+      lineHeight: Math.min(
+        2.1,
+        Math.max(1.4, Number(stored.lineHeight) || 1.75),
+      ),
+    };
+  } catch {
+    return defaultTextSettings;
+  }
+}
+
+export function saveStoredTextSettings(settings: ReaderTextSettings): void {
+  if (!storageAvailable()) return;
+  window.localStorage.setItem(TEXT_SETTINGS_KEY, JSON.stringify(settings));
 }
