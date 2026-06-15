@@ -64,7 +64,7 @@ export function ReaderControls({
       {visible ? (
         <>
           <motion.header
-            className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#151515]/88 px-2 pb-2 pt-[max(8px,env(safe-area-inset-top))] text-white backdrop-blur-xl sm:px-4"
+            className="fixed inset-x-0 top-0 z-50 border-b border-white/15 bg-[#151515]/95 px-2 pb-2 pt-[max(8px,env(safe-area-inset-top))] text-white shadow-lg shadow-black/25 backdrop-blur-xl sm:px-4"
             initial={{ y: -90, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -90, opacity: 0 }}
