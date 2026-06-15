@@ -152,6 +152,7 @@ export function saveStoredReaderLayout(
 const defaultTextSettings: ReaderTextSettings = {
   fontSize: 19,
   lineHeight: 1.75,
+  language: "auto",
 };
 
 export function getStoredTextSettings(): ReaderTextSettings {
@@ -161,12 +162,37 @@ export function getStoredTextSettings(): ReaderTextSettings {
     const stored = JSON.parse(
       window.localStorage.getItem(TEXT_SETTINGS_KEY) || "{}",
     ) as Partial<ReaderTextSettings>;
+    const supportedLanguages = new Set([
+      "auto",
+      "en",
+      "hi",
+      "ml",
+      "ta",
+      "te",
+      "kn",
+      "bn",
+      "gu",
+      "pa",
+      "ur",
+      "ar",
+      "zh",
+      "ja",
+      "ko",
+      "es",
+      "fr",
+      "de",
+      "pt",
+      "ru",
+    ]);
     return {
       fontSize: Math.min(28, Math.max(15, Number(stored.fontSize) || 19)),
       lineHeight: Math.min(
         2.1,
         Math.max(1.4, Number(stored.lineHeight) || 1.75),
       ),
+      language: supportedLanguages.has(stored.language || "")
+        ? stored.language!
+        : "auto",
     };
   } catch {
     return defaultTextSettings;

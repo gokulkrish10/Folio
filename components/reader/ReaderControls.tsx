@@ -6,6 +6,7 @@ import {
   Bookmark,
   ChevronLeft,
   ChevronRight,
+  GraduationCap,
   Menu,
   Moon,
   RotateCcw,
@@ -22,7 +23,9 @@ interface ReaderControlsProps {
   bookmarked: boolean;
   nightMode: boolean;
   zoomPercent: number;
+  studyMode: boolean;
   onBookmark: () => void;
+  onStudy: () => void;
   onToggleNightMode: () => void;
   onResetZoom: () => void;
   onMenu: () => void;
@@ -49,7 +52,9 @@ export function ReaderControls({
   bookmarked,
   nightMode,
   zoomPercent,
+  studyMode,
   onBookmark,
+  onStudy,
   onToggleNightMode,
   onResetZoom,
   onMenu,
@@ -79,6 +84,18 @@ export function ReaderControls({
               <h1 className="min-w-0 flex-1 truncate px-1 text-sm font-medium sm:text-base">
                 {title}
               </h1>
+              <button
+                type="button"
+                onClick={onStudy}
+                className={`reader-control-button ${
+                  studyMode ? "bg-white/15 text-[var(--accent)]" : ""
+                }`}
+                aria-label={studyMode ? "Close Study Desk" : "Open Study Desk"}
+                aria-pressed={studyMode}
+                title="Study Desk"
+              >
+                <GraduationCap size={21} />
+              </button>
               <button
                 type="button"
                 onClick={onToggleNightMode}

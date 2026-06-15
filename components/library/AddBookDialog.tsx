@@ -1,11 +1,18 @@
 "use client";
 
-import { FileUp, Link2, Plus } from "lucide-react";
+import {
+  BookOpen,
+  Check,
+  FileUp,
+  GraduationCap,
+  Link2,
+  Plus,
+} from "lucide-react";
 import { useState, type ChangeEvent } from "react";
 import { PDFLinkForm } from "@/components/library/PDFLinkForm";
 import { Modal } from "@/components/ui/Modal";
 import { importBookFromFile } from "@/lib/book-import";
-import type { BookSummary } from "@/types/book";
+import type { BookPurpose, BookSummary } from "@/types/book";
 
 interface AddBookDialogProps {
   onUploaded: (book: BookSummary) => void;
@@ -18,6 +25,7 @@ export function AddBookDialog({
 }: AddBookDialogProps) {
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [purpose, setPurpose] = useState<BookPurpose>("read");
 
   const onFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -26,7 +34,7 @@ export function AddBookDialog({
 
     setUploading(true);
     try {
-      onUploaded(await importBookFromFile(file));
+      onUploaded(await importBookFromFile(file, purpose));
       setOpen(false);
     } catch (error) {
       onError(
@@ -50,6 +58,51 @@ export function AddBookDialog({
       </button>
 
       <Modal open={open} onClose={() => setOpen(false)} title="Add a book">
+        <div className="mb-5 grid grid-cols-2 gap-2">
+          {[
+            {
+              id: "read" as const,
+              label: "Reading",
+              detail: "Clean, calm reader",
+              icon: BookOpen,
+            },
+            {
+              id: "study" as const,
+              label: "Study Desk",
+              detail: "Search, mark, note",
+              icon: GraduationCap,
+            },
+          ].map((option) => {
+            const Icon = option.icon;
+            const selected = purpose === option.id;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setPurpose(option.id)}
+                className={`relative min-h-24 rounded-2xl border p-3 text-left transition ${
+                  selected
+                    ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                    : "border-[var(--border)] bg-[var(--surface-muted)]"
+                }`}
+                aria-pressed={selected}
+              >
+                <Icon size={20} className="text-[var(--accent-strong)]" />
+                <strong className="mt-3 block text-sm">{option.label}</strong>
+                <span className="mt-1 block text-[11px] text-[var(--muted)]">
+                  {option.detail}
+                </span>
+                {selected ? (
+                  <Check
+                    size={15}
+                    className="absolute right-3 top-3 text-[var(--accent-strong)]"
+                  />
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+
         <label className="flex min-h-24 cursor-pointer items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 transition hover:border-[var(--accent)]">
           <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent-strong)]">
             <FileUp size={20} />
@@ -88,6 +141,7 @@ export function AddBookDialog({
             onUploaded={onUploaded}
             onError={onError}
             onComplete={() => setOpen(false)}
+            purpose={purpose}
           />
         </div>
       </Modal>

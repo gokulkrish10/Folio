@@ -3,18 +3,20 @@
 import { Download, Link2, LoaderCircle } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { importBookFromUrl } from "@/lib/book-import";
-import type { BookSummary } from "@/types/book";
+import type { BookPurpose, BookSummary } from "@/types/book";
 
 interface PDFLinkFormProps {
   onUploaded: (book: BookSummary) => void;
   onError: (message: string) => void;
   onComplete?: () => void;
+  purpose?: BookPurpose;
 }
 
 export function PDFLinkForm({
   onUploaded,
   onError,
   onComplete,
+  purpose = "read",
 }: PDFLinkFormProps) {
   const [url, setUrl] = useState("");
   const [importing, setImporting] = useState(false);
@@ -25,7 +27,7 @@ export function PDFLinkForm({
 
     setImporting(true);
     try {
-      const book = await importBookFromUrl(url);
+      const book = await importBookFromUrl(url, purpose);
       onUploaded(book);
       setUrl("");
       onComplete?.();

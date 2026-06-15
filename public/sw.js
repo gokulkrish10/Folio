@@ -1,5 +1,15 @@
-const CACHE_NAME = "folio-shell-v1";
-const APP_SHELL = ["/", "/manifest.webmanifest", "/icon.svg", "/pdf.worker.min.mjs"];
+const CACHE_NAME = "folio-shell-v2";
+const APP_SHELL = [
+  "/",
+  "/manifest.webmanifest",
+  "/icon.svg",
+  "/pdf.worker.min.mjs",
+  "/pdfjs/wasm/jbig2.wasm",
+  "/pdfjs/wasm/jbig2_nowasm_fallback.js",
+  "/pdfjs/wasm/openjpeg.wasm",
+  "/pdfjs/wasm/openjpeg_nowasm_fallback.js",
+  "/pdfjs/wasm/qcms_bg.wasm",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

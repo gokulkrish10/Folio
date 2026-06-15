@@ -2,7 +2,7 @@
 
 import { createBookFromFile } from "@/lib/book-metadata";
 import { saveBook } from "@/lib/storage";
-import type { BookRecord, BookSummary } from "@/types/book";
+import type { BookPurpose, BookRecord, BookSummary } from "@/types/book";
 
 const PDF_MIME_TYPE = "application/pdf";
 
@@ -24,17 +24,23 @@ function filenameFromUrl(value: string) {
   }
 }
 
-export async function importBookFromFile(file: File): Promise<BookSummary> {
+export async function importBookFromFile(
+  file: File,
+  purpose: BookPurpose = "read",
+): Promise<BookSummary> {
   if (file.type !== PDF_MIME_TYPE && !file.name.toLowerCase().endsWith(".pdf")) {
     throw new Error("Please choose a PDF file.");
   }
 
-  const book = await createBookFromFile(file);
+  const book = await createBookFromFile(file, purpose);
   await saveBook(book);
   return toSummary(book);
 }
 
-export async function importBookFromUrl(value: string): Promise<BookSummary> {
+export async function importBookFromUrl(
+  value: string,
+  purpose: BookPurpose = "read",
+): Promise<BookSummary> {
   const url = value.trim();
   let parsed: URL;
 
@@ -65,5 +71,5 @@ export async function importBookFromUrl(value: string): Promise<BookSummary> {
   const file = new File([pdfData], filenameFromUrl(parsed.toString()), {
     type: PDF_MIME_TYPE,
   });
-  return importBookFromFile(file);
+  return importBookFromFile(file, purpose);
 }

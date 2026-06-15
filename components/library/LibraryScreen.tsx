@@ -11,6 +11,7 @@ import {
   getBookSummaries,
 } from "@/lib/storage";
 import { removeReadingProgress } from "@/lib/reading-progress";
+import { removeStudyData } from "@/lib/study-storage";
 import type { BookSummary } from "@/types/book";
 
 interface Notice {
@@ -53,6 +54,7 @@ export function LibraryScreen() {
   const onDelete = async (book: BookSummary) => {
     await deleteBook(book.id);
     removeReadingProgress(book.id);
+    removeStudyData(book.id);
     setBooks((current) => current.filter((item) => item.id !== book.id));
     setNotice({ type: "success", message: `${book.title} was removed.` });
   };

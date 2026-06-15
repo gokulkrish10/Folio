@@ -2,7 +2,7 @@
 
 import { nanoid } from "nanoid";
 import { createCoverDataUrl, loadPDF } from "@/lib/pdf-engine";
-import type { BookRecord } from "@/types/book";
+import type { BookPurpose, BookRecord } from "@/types/book";
 
 function titleFromFilename(filename: string) {
   return filename
@@ -12,7 +12,10 @@ function titleFromFilename(filename: string) {
     .trim();
 }
 
-export async function createBookFromFile(file: File): Promise<BookRecord> {
+export async function createBookFromFile(
+  file: File,
+  purpose: BookPurpose = "read",
+): Promise<BookRecord> {
   const pdfData = await file.arrayBuffer();
   const document = await loadPDF(pdfData);
 
@@ -30,6 +33,7 @@ export async function createBookFromFile(file: File): Promise<BookRecord> {
       coverDataUrl,
       fileSize: file.size,
       addedAt: new Date().toISOString(),
+      purpose,
     };
   } finally {
     await document.cleanup();

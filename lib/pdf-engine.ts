@@ -5,7 +5,11 @@ import type {
   PDFPageProxy,
   RenderTask,
 } from "pdfjs-dist";
-import type { ReflowBlock, TocItem } from "@/types/book";
+import type {
+  ReflowBlock,
+  StudySearchResult,
+  TocItem,
+} from "@/types/book";
 
 let pdfModulePromise: Promise<typeof import("pdfjs-dist")> | null = null;
 
@@ -21,7 +25,10 @@ async function getPDFModule() {
 
 export async function loadPDF(data: ArrayBuffer): Promise<PDFDocumentProxy> {
   const pdfjs = await getPDFModule();
-  const task = pdfjs.getDocument({ data: new Uint8Array(data.slice(0)) });
+  const task = pdfjs.getDocument({
+    data: new Uint8Array(data.slice(0)),
+    wasmUrl: "/pdfjs/wasm/",
+  });
   return task.promise;
 }
 
@@ -156,14 +163,17 @@ function median(values: number[]) {
 function joinTextItems(items: ExtractedTextItem[]) {
   let text = "";
   let previous: ExtractedTextItem | null = null;
+  const rtl =
+    items.filter((item) => item.dir === "rtl").length > items.length / 2;
 
   for (const item of items) {
     const value = item.str.replace(/\s+/g, " ").trim();
     if (!value) continue;
 
     if (previous && text) {
-      const previousEnd = previous.transform[4] + previous.width;
-      const gap = item.transform[4] - previousEnd;
+      const gap = rtl
+        ? previous.transform[4] - (item.transform[4] + item.width)
+        : item.transform[4] - (previous.transform[4] + previous.width);
       const fontSize = Math.max(
         1,
         Math.hypot(item.transform[0], item.transform[1]),
@@ -241,8 +251,12 @@ export async function extractReflowBlocks(
   }
 
   const lineGroups = yBands.flatMap((band) => {
-    const ordered = [...band].sort(
-      (a, b) => a.transform[4] - b.transform[4],
+    const rtl =
+      band.filter((item) => item.dir === "rtl").length > band.length / 2;
+    const ordered = [...band].sort((a, b) =>
+      rtl
+        ? b.transform[4] - a.transform[4]
+        : a.transform[4] - b.transform[4],
     );
     const groups: ExtractedTextItem[][] = [];
 
@@ -266,8 +280,13 @@ export async function extractReflowBlocks(
 
   let lines: TextLine[] = lineGroups
     .map((lineItems) => {
-      const ordered = [...lineItems].sort(
-        (a, b) => a.transform[4] - b.transform[4],
+      const rtl =
+        lineItems.filter((item) => item.dir === "rtl").length >
+        lineItems.length / 2;
+      const ordered = [...lineItems].sort((a, b) =>
+        rtl
+          ? b.transform[4] - a.transform[4]
+          : a.transform[4] - b.transform[4],
       );
       const x = Math.min(...ordered.map((item) => item.transform[4]));
       const right = Math.max(
@@ -369,4 +388,78 @@ export async function extractReflowBlocks(
   flushParagraph();
   cache.set(pageNumber, blocks);
   return blocks;
+}
+
+function countMatches(text: string, terms: string[]) {
+  return terms.reduce((count, term) => {
+    let offset = 0;
+    let termCount = 0;
+    while (offset < text.length) {
+      const index = text.indexOf(term, offset);
+      if (index === -1) break;
+      termCount += 1;
+      offset = index + Math.max(1, term.length);
+    }
+    return count + termCount;
+  }, 0);
+}
+
+function createSearchSnippet(text: string, term: string) {
+  const normalized = text.toLocaleLowerCase();
+  const index = normalized.indexOf(term);
+  const start = Math.max(0, index - 90);
+  const end = Math.min(text.length, index + term.length + 150);
+  const snippet = text.slice(start, end).replace(/\s+/g, " ").trim();
+  return `${start > 0 ? "…" : ""}${snippet}${end < text.length ? "…" : ""}`;
+}
+
+export async function searchPDFText(
+  document: PDFDocumentProxy,
+  query: string,
+  onProgress?: (completed: number, total: number) => void,
+  shouldContinue?: () => boolean,
+): Promise<{
+  results: StudySearchResult[];
+  scannedPages: number;
+}> {
+  const terms = query
+    .toLocaleLowerCase()
+    .trim()
+    .split(/\s+/)
+    .filter((term) => term.length >= 2);
+  if (!terms.length) return { results: [], scannedPages: 0 };
+
+  const results: StudySearchResult[] = [];
+  let scannedPages = 0;
+
+  for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+    if (shouldContinue && !shouldContinue()) break;
+    const blocks = await extractReflowBlocks(document, pageNumber);
+    const text = blocks.map((block) => block.text).join(" ");
+    if (!text) {
+      scannedPages += 1;
+    } else {
+      const normalized = text.toLocaleLowerCase();
+      if (terms.every((term) => normalized.includes(term))) {
+        results.push({
+          page: pageNumber,
+          snippet: createSearchSnippet(text, terms[0]),
+          occurrences: countMatches(normalized, terms),
+        });
+      }
+    }
+    onProgress?.(pageNumber, document.numPages);
+    if (pageNumber % 8 === 0) {
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
+    }
+  }
+
+  return {
+    results: results
+      .sort(
+        (a, b) => b.occurrences - a.occurrences || a.page - b.page,
+      )
+      .slice(0, 150),
+    scannedPages,
+  };
 }

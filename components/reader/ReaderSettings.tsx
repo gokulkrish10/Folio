@@ -13,7 +13,34 @@ import {
 } from "lucide-react";
 import { ThemeSelector } from "@/components/reader/ThemeSelector";
 import { BottomSheet } from "@/components/ui/BottomSheet";
-import type { ReaderLayout, ReaderTextSettings } from "@/types/book";
+import type {
+  ReaderLanguage,
+  ReaderLayout,
+  ReaderTextSettings,
+} from "@/types/book";
+
+const languages: Array<{ value: ReaderLanguage; label: string }> = [
+  { value: "auto", label: "Auto-detect" },
+  { value: "en", label: "English" },
+  { value: "hi", label: "Hindi - हिन्दी" },
+  { value: "ml", label: "Malayalam - മലയാളം" },
+  { value: "ta", label: "Tamil - தமிழ்" },
+  { value: "te", label: "Telugu - తెలుగు" },
+  { value: "kn", label: "Kannada - ಕನ್ನಡ" },
+  { value: "bn", label: "Bengali - বাংলা" },
+  { value: "gu", label: "Gujarati - ગુજરાતી" },
+  { value: "pa", label: "Punjabi - ਪੰਜਾਬੀ" },
+  { value: "ur", label: "Urdu - اردو" },
+  { value: "ar", label: "Arabic - العربية" },
+  { value: "zh", label: "Chinese - 中文" },
+  { value: "ja", label: "Japanese - 日本語" },
+  { value: "ko", label: "Korean - 한국어" },
+  { value: "es", label: "Spanish - Español" },
+  { value: "fr", label: "French - Français" },
+  { value: "de", label: "German - Deutsch" },
+  { value: "pt", label: "Portuguese - Português" },
+  { value: "ru", label: "Russian - Русский" },
+];
 
 interface ReaderSettingsProps {
   open: boolean;
@@ -98,7 +125,31 @@ export function ReaderSettings({
       </div>
 
       {layout === "reflow" ? (
-        <div className="mt-4 rounded-2xl bg-[var(--surface-muted)] p-4">
+        <div className="mt-4 space-y-4 rounded-2xl bg-[var(--surface-muted)] p-4">
+          <label className="block">
+            <span className="text-sm font-semibold">Book language</span>
+            <span className="mt-1 block text-xs text-[var(--muted)]">
+              Auto-detect chooses suitable type and text direction.
+            </span>
+            <select
+              value={textSettings.language}
+              onChange={(event) =>
+                onTextSettingsChange({
+                  ...textSettings,
+                  language: event.target.value as ReaderLanguage,
+                })
+              }
+              className="mt-3 min-h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--text)]"
+              aria-label="Book language"
+            >
+              {languages.map((language) => (
+                <option key={language.value} value={language.value}>
+                  {language.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="h-px bg-[var(--border)]" />
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-semibold">Text size</p>

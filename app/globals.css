@@ -63,7 +63,9 @@ body {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -77,6 +79,12 @@ button:focus-visible,
 a:focus-visible,
 label:focus-within,
 input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+select:focus-visible,
+textarea:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
@@ -139,7 +147,8 @@ input:focus-visible {
 
 .reflow-page {
   color: var(--text);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family:
+    Georgia, "Noto Serif", "Times New Roman", serif;
   font-size: var(--reader-font-size);
   line-height: var(--reader-line-height);
   text-rendering: optimizeLegibility;
@@ -147,9 +156,94 @@ input:focus-visible {
   hyphens: auto;
 }
 
+.reflow-page [data-script="devanagari"],
+.reflow-page[data-script="devanagari"] {
+  font-family: "Noto Serif Devanagari", "Nirmala UI", "Kohinoor Devanagari",
+    Mangal, serif;
+}
+
+.reflow-page [data-script="malayalam"],
+.reflow-page[data-script="malayalam"] {
+  font-family: "Noto Serif Malayalam", "Noto Sans Malayalam", "Kartika",
+    "Malayalam MN", sans-serif;
+}
+
+.reflow-page [data-script="tamil"],
+.reflow-page[data-script="tamil"] {
+  font-family: "Noto Serif Tamil", "Noto Sans Tamil", "Tamil MN", Latha,
+    sans-serif;
+}
+
+.reflow-page [data-script="telugu"],
+.reflow-page[data-script="telugu"] {
+  font-family: "Noto Serif Telugu", "Noto Sans Telugu", "Telugu MN", Gautami,
+    sans-serif;
+}
+
+.reflow-page [data-script="kannada"],
+.reflow-page[data-script="kannada"] {
+  font-family: "Noto Serif Kannada", "Noto Sans Kannada", "Kannada MN", Tunga,
+    sans-serif;
+}
+
+.reflow-page [data-script="bengali"],
+.reflow-page[data-script="bengali"] {
+  font-family: "Noto Serif Bengali", "Noto Sans Bengali", "Bangla MN", Vrinda,
+    sans-serif;
+}
+
+.reflow-page [data-script="gujarati"],
+.reflow-page[data-script="gujarati"] {
+  font-family: "Noto Serif Gujarati", "Noto Sans Gujarati", "Gujarati MT",
+    Shruti, sans-serif;
+}
+
+.reflow-page [data-script="gurmukhi"],
+.reflow-page[data-script="gurmukhi"] {
+  font-family: "Noto Serif Gurmukhi", "Noto Sans Gurmukhi", "Gurmukhi MN",
+    Raavi, sans-serif;
+}
+
+.reflow-page [data-script="arabic"],
+.reflow-page[data-script="arabic"] {
+  font-family: "Noto Naskh Arabic", "Noto Sans Arabic", "Geeza Pro", Tahoma,
+    sans-serif;
+}
+
+.reflow-page [data-script="cjk"],
+.reflow-page[data-script="cjk"] {
+  font-family: "Noto Serif CJK SC", "Noto Serif CJK JP", "Songti SC",
+    "Yu Mincho", serif;
+}
+
+.reflow-page [data-script="korean"],
+.reflow-page[data-script="korean"] {
+  font-family: "Noto Serif CJK KR", "Apple SD Gothic Neo", Batang, serif;
+}
+
+.reflow-page [data-script="cyrillic"],
+.reflow-page[data-script="cyrillic"] {
+  font-family: "Noto Serif", Georgia, "Times New Roman", serif;
+}
+
+.reflow-page [data-script="thai"],
+.reflow-page[data-script="thai"] {
+  font-family: "Noto Serif Thai", "Noto Sans Thai", Thonburi, Tahoma,
+    sans-serif;
+}
+
 .reflow-paragraph {
   margin: 0 0 1.15em;
-  text-align: left;
+  text-align: start;
+}
+
+.study-highlight {
+  margin: 0 -0.06em;
+  padding: 0.04em 0.08em;
+  color: inherit;
+  border-radius: 0.18em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 .reflow-heading {

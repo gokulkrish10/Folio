@@ -1,6 +1,12 @@
 "use client";
 
-import { Bookmark, MoreHorizontal, Play, Trash2 } from "lucide-react";
+import {
+  Bookmark,
+  GraduationCap,
+  MoreHorizontal,
+  Play,
+  Trash2,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -76,9 +82,19 @@ export function BookCard({ book, onDelete }: BookCardProps) {
         </div>
 
         <div className="px-0.5 pt-3">
-          <h3 className="truncate text-sm font-semibold sm:text-base">
-            {book.title}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="min-w-0 flex-1 truncate text-sm font-semibold sm:text-base">
+              {book.title}
+            </h3>
+            {book.purpose === "study" ? (
+              <span
+                className="grid size-6 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)]"
+                title="Study Desk"
+              >
+                <GraduationCap size={13} />
+              </span>
+            ) : null}
+          </div>
           <p className="mt-1 truncate text-[11px] text-[var(--muted)] sm:text-xs">
             Page {currentPage} of {book.totalPages}
           </p>
@@ -90,8 +106,16 @@ export function BookCard({ book, onDelete }: BookCardProps) {
             href={`/reader/${book.id}`}
             className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--text)] px-2 text-xs font-semibold text-[var(--bg)] transition hover:opacity-85 sm:text-sm"
           >
-            <Play size={15} fill="currentColor" />
-            {currentPage > 1 ? "Continue" : "Start reading"}
+            {book.purpose === "study" ? (
+              <GraduationCap size={16} />
+            ) : (
+              <Play size={15} fill="currentColor" />
+            )}
+            {book.purpose === "study"
+              ? "Open Study Desk"
+              : currentPage > 1
+                ? "Continue"
+                : "Start reading"}
           </Link>
         </div>
       </article>

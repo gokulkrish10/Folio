@@ -10,6 +10,7 @@ import { PDFCanvas } from "@/components/reader/PDFCanvas";
 import { ReflowTextPage } from "@/components/reader/ReflowTextPage";
 import { ReaderControls } from "@/components/reader/ReaderControls";
 import { ReaderSettings } from "@/components/reader/ReaderSettings";
+import { StudyWorkspace } from "@/components/reader/StudyWorkspace";
 import { TOCPanel } from "@/components/reader/TOCPanel";
 import { ZoomWrapper } from "@/components/reader/ZoomWrapper";
 import { useReader } from "@/contexts/ReaderContext";
@@ -27,7 +28,18 @@ import {
   saveStoredTextSettings,
   saveStoredZoom,
 } from "@/lib/reading-progress";
-import type { ReaderLayout, ReaderTextSettings } from "@/types/book";
+import {
+  addStudyHighlight,
+  getStudyData,
+  removeStudyHighlight,
+  saveStudyNote,
+} from "@/lib/study-storage";
+import type {
+  HighlightColor,
+  ReaderLayout,
+  ReaderTextSettings,
+  StudyData,
+} from "@/types/book";
 
 interface ReaderScreenProps {
   bookId: string;
@@ -45,6 +57,11 @@ export function ReaderScreen({ bookId }: ReaderScreenProps) {
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
   const [tocOpen, setTocOpen] = useState(false);
   const [jumpOpen, setJumpOpen] = useState(false);
+  const [studyOpen, setStudyOpen] = useState(false);
+  const [studyEnabled, setStudyEnabled] = useState(false);
+  const [studyData, setStudyData] = useState<StudyData>(() =>
+    getStudyData(bookId),
+  );
   const [zoomScale, setZoomScale] = useState(() => getStoredZoom(bookId));
   const [readerLayout, setReaderLayout] = useState<ReaderLayout>(() =>
     getStoredReaderLayout(bookId),
@@ -68,6 +85,12 @@ export function ReaderScreen({ bookId }: ReaderScreenProps) {
         bookmarks: stored.bookmarks,
       },
     });
+    if (book.purpose === "study") {
+      window.setTimeout(() => {
+        setStudyEnabled(true);
+        setStudyOpen(true);
+      }, 0);
+    }
     startSession();
   }, [book, dispatch, startSession]);
 
@@ -119,7 +142,7 @@ export function ReaderScreen({ bookId }: ReaderScreenProps) {
   const swipeHandlers = useSwipeNavigation(previous, next, !zoomed);
 
   const anyPanelOpen =
-    settingsOpen || bookmarksOpen || tocOpen || jumpOpen;
+    settingsOpen || bookmarksOpen || tocOpen || jumpOpen || studyOpen;
 
   useEffect(() => {
     if (!state.controlsVisible || anyPanelOpen) return;
@@ -141,10 +164,32 @@ export function ReaderScreen({ bookId }: ReaderScreenProps) {
     setActivity(Date.now());
   }, [dispatch]);
 
+  const useOriginalPage = useCallback(() => {
+    setReaderLayout("page");
+    setZoomScale(1);
+    wakeControls();
+  }, [wakeControls]);
+
   const toggleCurrentBookmark = () => {
     const updated = toggleBookmark(state.currentPage);
     dispatch({ type: "SET_BOOKMARKS", bookmarks: updated.bookmarks });
     wakeControls();
+  };
+
+  const createHighlight = (
+    blockIndex: number,
+    quote: string,
+    color: HighlightColor,
+  ) => {
+    setStudyData(
+      addStudyHighlight(
+        bookId,
+        state.currentPage,
+        blockIndex,
+        quote,
+        color,
+      ),
+    );
   };
 
   if (loading) {
@@ -202,7 +247,7 @@ export function ReaderScreen({ bookId }: ReaderScreenProps) {
         zoomed
           ? "h-dvh overflow-hidden overscroll-none"
           : "min-h-dvh overflow-x-hidden"
-      }`}
+      } ${studyOpen ? "lg:pr-[390px]" : ""}`}
       onClick={() =>
         dispatch({
           type: "SET_CONTROLS",
@@ -238,7 +283,11 @@ export function ReaderScreen({ bookId }: ReaderScreenProps) {
                 pageNumber={state.currentPage}
                 totalPages={state.totalPages}
                 settings={textSettings}
-                onUseOriginal={() => setReaderLayout("page")}
+                onUseOriginal={useOriginalPage}
+                highlights={studyData.highlights.filter(
+                  (highlight) => highlight.page === state.currentPage,
+                )}
+                onHighlight={studyEnabled ? createHighlight : undefined}
               />
             ) : (
               <ZoomWrapper
@@ -264,9 +313,15 @@ export function ReaderScreen({ bookId }: ReaderScreenProps) {
         totalPages={state.totalPages}
         bookmarked={bookmarked}
         nightMode={theme === "dark"}
+        studyMode={studyOpen}
         zoomPercent={
           readerLayout === "page" ? Math.round(zoomScale * 100) : 100
         }
+        onStudy={() => {
+          if (!studyOpen) setStudyEnabled(true);
+          setStudyOpen(!studyOpen);
+          wakeControls();
+        }}
         onToggleNightMode={() => {
           setTheme(theme === "dark" ? "light" : "dark");
           wakeControls();
@@ -329,6 +384,31 @@ export function ReaderScreen({ bookId }: ReaderScreenProps) {
         currentPage={state.currentPage}
         totalPages={state.totalPages}
         onJump={goToPage}
+      />
+      <StudyWorkspace
+        open={studyOpen}
+        title={state.title}
+        document={document}
+        page={state.currentPage}
+        totalPages={state.totalPages}
+        layout={readerLayout}
+        bookmarks={state.bookmarks}
+        studyData={studyData}
+        onClose={() => setStudyOpen(false)}
+        onNavigate={goToPage}
+        onDeleteHighlight={(highlightId) =>
+          setStudyData(removeStudyHighlight(bookId, highlightId))
+        }
+        onSaveNote={(page, text) =>
+          setStudyData(saveStudyNote(bookId, page, text))
+        }
+        onUseReadableText={() => {
+          setReaderLayout("reflow");
+          if (window.matchMedia("(max-width: 1023px)").matches) {
+            setStudyOpen(false);
+          }
+          wakeControls();
+        }}
       />
     </main>
   );
